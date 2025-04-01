@@ -1,0 +1,104 @@
+workflow:
+    name: Android Application Pipeline
+    rules:
+        - if: $CI_COMMIT_BRANCH == 'main' || $CI_COMMIT_BRANCH =~ /^feature/
+          when: always
+        - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == 'merge_request_event'
+          when: always
+
+stages:
+  - test
+  - containerization
+  - deploy
+
+variables:
+  ANDROID_SDK_ROOT: "/opt/android-sdk"
+  ANDROID_HOME: "/opt/android-sdk"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  DOCKER_USERNAME: farahelloumi
+  IMAGE_VERSION: $CI_PIPELINE_ID
+
+cache:
+  key: gradle-cache
+  paths:
+    - .gradle/
+    - app/.gradle/
+    - app/build/
+
+
+before_script:
+  - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+  - sudo mkdir -p $ANDROID_SDK_ROOT/licenses
+  - sudo chmod -R 777 $ANDROID_SDK_ROOT
+  - yes | sdkmanager --licenses || true
+  - chmod +x gradlew
+
+unit_testing:
+  stage: test
+  tags:    
+    - local
+    - aosp
+    - linux
+  script:
+    - ./gradlew test
+
+docker_build:
+  stage: containerization
+  tags:    
+    - local
+    - aosp
+    - linux
+  image: docker:24.0.5
+  dependencies: []
+  needs:
+    - unit_testing
+  services:
+    - docker:24.0.5-dind
+  script:
+    - sudo docker build -t $DOCKER_USERNAME/android-build:$IMAGE_VERSION .
+    - sudo docker images $DOCKER_USERNAME/android-build:$IMAGE_VERSION
+    - mkdir image
+    - sudo docker save $DOCKER_USERNAME/android-build:$IMAGE_VERSION | gzip > image/android-build-image-$IMAGE_VERSION.tar.gz
+
+  artifacts:
+    paths:
+      - image/android-build-image-$IMAGE_VERSION.tar.gz
+    when: on_success
+    expire_in: 3 days
+
+# Étape de test de l'image Docker
+docker_test:
+  stage: containerization
+  tags:    
+    - local
+    - aosp
+    - linux
+  image: docker:24.0.5
+  needs:
+    - docker_build
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker load -i image/android-build-image-$IMAGE_VERSION.tar
+    - docker run --name android-build-app -d -p 3000:3000 $DOCKER_USERNAME/android-build:$IMAGE_VERSION
+    - export IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' android-build-app)
+    - echo $IP
+    - docker run alpine wget -q -O - http://$IP:3000/live | grep live
+
+# Étape de push de l'image Docker dans le registre
+docker_push:
+  stage: containerization
+  tags:    
+    - local
+    - aosp
+    - linux
+  needs:
+    - docker_build
+    - docker_test
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker load -i image/android-build-image-$IMAGE_VERSION.tar
+    - docker login --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
+    - docker push $DOCKER_USERNAME/android-build:$IMAGE_VERSION

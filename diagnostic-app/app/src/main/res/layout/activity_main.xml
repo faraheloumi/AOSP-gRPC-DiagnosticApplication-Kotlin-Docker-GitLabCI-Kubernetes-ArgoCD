@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <!-- Button for Real-Time Sensor Data -->
+    <Button
+        android:id="@+id/btnSensorData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Real-Time Sensor Data" />
+
+    <!-- Button for DrivingTips -->
+    <Button
+        android:id="@+id/btnDrivingTips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DrivingTips" />
+    <Button
+        android:id="@+id/btnReport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View Report" />
+
+
+</LinearLayout>
