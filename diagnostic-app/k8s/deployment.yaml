@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: android-app
+  labels:
+    app: android-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: android-app
+  template:
+    metadata:
+      labels:
+        app: android-app
+    spec:
+      containers:
+        - name: android-app
+          image: mohamedhedi558/android-app:v2
+          ports:
+            - containerPort: 8080
