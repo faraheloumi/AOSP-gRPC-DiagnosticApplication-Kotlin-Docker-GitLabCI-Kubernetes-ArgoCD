@@ -177,21 +177,38 @@ If you're using 16GB of RAM, you'll need to add swap memory to avoid compilation
     ```bash
     free -h
     ```
-#### **Clone AOSP**:
-```bash
-mkdir ~/android-aosp
-cd ~/android-aosp
-repo init -u https://android.googlesource.com/platform/manifest -b android14-gsi
-repo sync -j4
-```
+#### **Getting Started**:
+1. **Clone AOSP project**:
 
-## 🛠️ **Configure the Build**:
-```bash
-source build/envsetup.sh
-lunch aosp_cf_x86_64_phone-trunk_staging-userdebug  # or 'lunch 14'
-echo "$TARGET_PRODUCT-$TARGET_BUILD_VARIANT"
-```
-### 💡 **Fix Common Build Issues**:
+    We recommend using Android Version 14 GSI for building AOSP. This version provides stability and compatibility with the latest features and enhancements.
+    
+    - Creates a folder named android-aosp in the home directory and moves into it to prepare the environment for downloading the Android source code.
+        ```bash
+        mkdir ~/android-aosp
+        cd ~/android-aosp
+        ```
+    - To get the latest version of Repo with its recent bug fixes . You must specify a URL for the manifest , which specifies where the various repositories included in the Android source are placed within your working directory
+      ```bash
+      repo init -u https://android.googlesource.com/platform/manifest -b android14-gsi
+      ```
+    - Downloads new changes and updates the working files in your local environment, essentially accomplishing git fetch across all Git repositories. If you run repo sync without arguments, it synchronizes the files for all projects.
+        ```bash
+        repo sync -j4
+        ```
+2. **Set up your build environment and Choose a target**
+    - From within your working directory, source the envsetup.sh script to set up your build environment 
+    ```bash
+    source build/envsetup.sh
+    ```
+    - Before building Android, you must identify a target to build. A target reflects the target platform you are building for. To identify your target to build, use the lunch command followed by a string representing the target.
+    ```bash
+    lunch aosp_cf_x86_64_phone-trunk_staging-userdebug  # or 'lunch 14'
+    ```
+    - View the current target
+    ```bash
+    echo "$TARGET_PRODUCT-$TARGET_BUILD_VARIANT"
+    ```
+💡 **Fix Common Build Issues**:
 **Clang Library Issue**:
 
 If you encounter the error clang.real: error while loading shared libraries: libncurses.so.5, run:
@@ -206,7 +223,7 @@ sudo apt install bison
 bison --version
 ```
 
-## 💻 **Build the Code** 🛠️
+3. **Build the Code**
 ```bash
 make
 ```
