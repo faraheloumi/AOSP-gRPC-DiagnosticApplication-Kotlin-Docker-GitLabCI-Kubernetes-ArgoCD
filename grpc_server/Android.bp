@@ -1,0 +1,29 @@
+cc_binary {
+    name: "grpc_server",
+    vendor: true,
+    cflags: [
+        "-Wno-error",
+        "-Wno-unused-parameter",
+        "-Wno-implicit-fallthrough",
+        "-Wno-unused-result",
+        "-g",
+    ],
+    srcs: [
+        "greeter_server.cc",
+        "cmake/build/helloworld.grpc.pb.cc",
+        "cmake/build/helloworld.pb.cc",
+    ],
+    include_dirs: [
+        "external/grpc-grpc/include",
+        "external/protobuf/src",
+        "external/grpc-grpc/examples/cpp/helloworld/cmake/build/",
+    ],
+    shared_libs: [
+        "libprotobuf-cpp-full",
+        "libgrpc++_unsecure",
+        "libz",
+        "libc++",
+        "libm",
+        "libdl",
+    ],
+}

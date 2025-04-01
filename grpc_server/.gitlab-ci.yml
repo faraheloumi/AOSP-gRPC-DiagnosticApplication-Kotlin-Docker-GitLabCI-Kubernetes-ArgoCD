@@ -1,0 +1,48 @@
+stages:
+  - build
+  - deploy
+  - trigger-client
+
+variables:
+  AOSP_DIR: "/home/farah/android-aosp"
+  GRPC_SERVER: "/home/farah/android-aosp/out/target/product/vsoc_x86_64/vendor/bin"
+  ANDROID_SDK_PATH: "/opt/android-sdk"
+
+build:
+  stage: build
+  tags:
+    - local
+    - aosp
+    - linux
+  script:
+    - cd $AOSP_DIR
+    - source build/envsetup.sh
+    - lunch 14
+deploy:
+  stage: deploy
+  tags:
+    - local
+    - aosp
+    - linux
+  script:
+    #- launch_cvd
+    
+    - sudo adb devices
+    #- sudo adb wait-for-device
+ 
+    - sudo adb root
+    - sudo adb shell "vendor/bin/grpc_server" > grpc_server.log 2>&1 &
+    - sleep 30
+    - if adb shell "ps | grep grpc_server"; then echo "Server is running"; else echo "Server failed to start"; exit 1; fi
+    - touch /tmp/finished_indicator_file
+
+trigger-client:
+  stage: trigger-client
+  tags:
+    - local
+    - aosp
+    - linux
+  script:
+    - curl -X POST -F token=glptt-6aa890b66b4ae0c7165e7e4e64aa8086d4781004 -F ref=main https://gitlab.com/api/v4/projects/68155819/trigger/pipeline
+  only:
+    - main
