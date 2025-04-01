@@ -1,0 +1,6 @@
+<manifest>
+		<remote review="https://gitlab.com/grpc-application-communication"/>
+		<project name="grpc_server" path="grpc_server"/>
+		<project name="grpc_client" path="grpc_client"/>
+		<project name="diagnostic-app" path="diagnostic-app"/>
+</manifest>
