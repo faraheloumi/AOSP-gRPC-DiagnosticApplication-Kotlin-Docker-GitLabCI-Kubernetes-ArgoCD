@@ -1,0 +1,17 @@
+stages:
+  - wait
+  - test
+
+variables:
+  GRPC_CLIENT: "/home/farah/host"
+
+test:
+  stage: test
+  tags:
+    - local
+    - aosp
+    - linux
+  script:
+    - cd $GRPC_CLIENT
+    - python3 client.py
+    
