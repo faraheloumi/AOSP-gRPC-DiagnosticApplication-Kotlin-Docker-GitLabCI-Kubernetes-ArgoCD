@@ -15,8 +15,6 @@
 - [🔧 GitLab CI Architecture](#-aws-setup)
 - [⚡ Kubernetes Architecture & Deployment](#-aws-setup)
 - [🌐 Argo CD Architecture & Deployment](#-aws-setup)
-  - [🧱 Architecture Components](#-architecture-components)
-  - [⚙️ SetUp Instructions](#-setup-instructions)
 - [📈 Results](#-resultat)
 - [🔧 Usage](#-usage)
 - [🔮 Future Considerations](#-future-considerations)
@@ -72,6 +70,9 @@ project/
 │
 ├── diagnostic-app/
 │   ├── Source code for the Kotlin application
+│   ├── k8s/
+│   ├── ├── deployment.yaml                         # defining a Kubernetes Deploymen
+│   ├── ├── service.yaml                            # defining a Service of type LoadBalancer
 │   ├── .gitlab-ci.yml                              # GitLab configuration file for the CI/CD pipeline
 │   ├── Dockerfile                                  # Docker configuration file for the application
 │                   
@@ -445,3 +446,128 @@ Follow these steps to install and register a GitLab Runner:
       ```bash
       gitlab-runner register
       ```
+## ⚡ Kubernetes Architecture & Deployment
+The Kubernetes architecture for the diagnostic application facilitates scalable, secure, and automated deployment of application services.
+
+### Goals
+
+**Service Management:** Efficiently manage the Android application service using Kubernetes resources such as:
+
+- **Deployments:** Ensure high availability and scalability of application pods for the Android app.
+- **Services:** Expose the Android app pods to external traffic through a LoadBalancer service, while enabling internal communication between pods within the cluster.
+
+**Stability and Recovery:**
+
+- **Rollback functionality** ensures stability by allowing you to revert to a previous deployment if there are any issues.
+- This functionality helps minimize downtime and ensures the reliability of the application for users.
+
+### Kubernetes Components
+
+The deployment uses the following Kubernetes components:
+
+- **Deployments:** Manage the Android app’s application pods using Docker images pushed to DockerHub. Ensure high availability and scalability with configurable replicas, as specified in `deployment.yaml`.
+- **Services:** Expose the Android app using a **LoadBalancer** service to handle external traffic, and facilitate internal communication between the pods within the cluster. 
+
+## 🌐 Argo CD Architecture & Deployment
+
+**Argo CD** is a declarative, GitOps continuous delivery tool for Kubernetes that enables the automated deployment of applications. It follows the GitOps principle, where the Git repository is the source of truth for both the application configuration and deployment process. Argo CD simplifies application management by synchronizing Kubernetes resources with the desired state defined in the Git repository.
+
+The architecture of Argo CD consists of several key components:
+
+- **Argo CD Server:** The central component that serves the web UI, CLI, and API, allowing users to interact with the system, manage applications, and monitor the deployment process.
+- **Controller:** The core component that monitors the Git repository for changes and ensures the state of the Kubernetes resources matches the configurations in the repository.
+- **Repositories:** Argo CD connects to Git repositories (such as GitHub or GitLab) where Kubernetes YAML files, Helm charts, and Kustomize configurations are stored. These repositories define the desired state of the application and can be managed across multiple environments.
+
+**Deployment with Argo CD** for your Android app involves the following steps:
+
+1. **Set Up a Kubernetes Cluster**
+    For local testing, install **Minikube**:
+
+    ```bash
+    # Install Minikube (if not installed)
+    curl -LO <https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64>
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+    # Start Minikube
+    minikube start
+
+    # Verify that Kubernetes is running
+    kubectl get nodes
+    ```
+2. **Install Argo CD**
+    - **Install Argo CD in the Kubernetes Cluster**
+
+        ```bash
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f <https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml>
+        ```
+
+    - **Check Argo CD Pods**
+
+      ```bash
+      kubectl get pods -n argocd
+      ```
+
+    - **Expose Argo CD UI**
+
+      ```bash
+      kubectl port-forward svc/argocd-server -n argocd 8080:443
+      ```
+
+      Now, open **`https://localhost:8080`** in your browser.
+    - **Get Argo CD Admin Password**
+
+      ```bash
+      kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+      ```
+
+      Use **username: `admin`** and the decoded password to log in.
+3. **Deploy the App with Argo CD**
+    - **Add Your GitLab Repo to Argo CD**
+
+      ```bash
+      argocd repo add <https://gitlab.com/YOUR_GITLAB_USERNAME/YOUR_REPO.git> --username YOUR_GITLAB_USERNAME --password YOUR_GITLAB_PASSWORD
+      ```
+
+    - **Create an Argo CD Application**
+
+      ```bash
+      argocd app create android-app \\
+        --repo <https://gitlab.com/YOUR_GITLAB_USERNAME/YOUR_REPO.git> \\
+        --path k8s \\
+        --dest-server <https://kubernetes.default.svc> \\
+        --dest-namespace default
+      ```
+
+    - **Sync the Application**
+
+      ```bash
+      argocd app sync android-app
+      ```
+4. **Access the Deployed App**
+
+    - **Get the Service External IP**
+
+      ```bash
+      kubectl get svc android-app-service
+      ```
+
+      The **EXTERNAL-IP** column will show the app's IP. Open it in your browser.
+
+5. **Verify Deployment**
+      ```bash
+      kubectl get pods
+      kubectl logs -f deployment/android-app
+      ```
+## 📈 Results
+### Diagnostic Application
+![Project Architecture](./images/Application_Kotlin.png)
+
+### CI/CD pipelines
+![Project Architecture](./images/grpc_server_pipeline.png)
+![Project Architecture](./images/grpc_client_pipeline.png)
+![Project Architecture](./images/hello_farah_pipeline.png)
+
+### ArgoCD pipeline
+![Project Architecture](./images/argoCD_resultat.png)
+
