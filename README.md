@@ -94,74 +94,90 @@ project/
 ## 🏗️ Project Architecture
 
 ### Global Architecture
-![Project Architecture](./images/gRPC application communication architecture.png)
+![Project Architecture](./images/gRPC_application_communication_architecture.png)
 
+🔍 **How it Works:**
+1. **Embedded Communication**: Two STM32 microcontrollers communicate using the CAN protocol, enabling data exchange between the embedded components.
+2. **USB Data Transmission**: The STM32_2 microcontroller transmits diagnostic data to the host machine via USB communication.
+3. **gRPC Client-Server Model**: A gRPC client running on the host machine forwards requests to a gRPC server hosted in an Android Virtual Machine (VM) for processing.
+4. **Response Handling**: The gRPC server processes the request and returns a response to the gRPC client, completing the diagnostic workflow.
+5. **QT Application Integration**: The architecture allows for integration with a QT-based application for enhanced data visualization and user interaction.
 
-This guide will walk you through the process of setting up the AOSP build environment, compiling a C++ binary (`server.cpp`) to run in an Android VM (Cuttlefish), and establishing communication between a **gRPC client** (host) and a **gRPC server** (VM).
+## ⚙️ Technologies Used
+| Component            | Technology                          |
+|-----------------------|-------------------------------------|
+| **Frontend**         | Kotlin                             |
+| **Container Management** | Docker                             |
+| **CI/CD**   | GitLab CI, ArgoCD (GitOps-based CD)                           |  
+| **Orchestration**   | Kubernetes                           |  
 
-## 🖥️ **Prerequisites** 🛠️
+## 🌐 Communication between gRPC server and gRPC client
+This guide will walk you through the process of setting up the AOSP build environment, compiling a C++ binary (`server.cpp`) to run in an Android VM (Cuttlefish), and establishing communication between a **gRPC client** in host machine and a **gRPC server** in Virtual Machine.
+###  📚 AOSP project
+
+#### **Prerequisites**
 
 To successfully set up and run your C++ binary with gRPC on the Android VM, you'll need the following tools and requirements:
 
-### 🧰 **System Requirements**:
-- **OS**: Ubuntu 20.04+ 
-- **Disk space**: 400 GB+ free
-- **RAM**: 16 GB minimum
-- **Tools**:
-  - **Git**
-  - **Python**
-  - **Repo**
-  - **OpenJDK (11 or 17)**
+- **System Requirements**:
+  - **OS**: Ubuntu 20.04+ 
+  - **Disk space**: 400 GB+ free
+  - **RAM**: 16 GB minimum
+  - **Tools**:
+    - **Git**
+    - **Python**
+    - **Repo**
+    - **OpenJDK (11 or 17)**
 
-### 📦 **Install Prerequisites**:
+- **Installation & Dependencies**:
+  - 1️⃣ **Install Git**:
 
-#### 1️⃣ **Install Git**:
-```bash
-sudo apt update
-sudo apt install git -y
-git --version
-```
+      ```bash
+      sudo apt update
+      sudo apt install git -y
+      git --version
+      ```
 
-#### 2️⃣ **Install Python**:
-```bash
-sudo apt install python3 python3-pip -y
-python3 --version
-```
+  - 2️⃣ **Install Python**:
+      ```bash
+      sudo apt install python3 python3-pip -y
+      python3 --version
+      ```
 
-#### 3️⃣ **Install Repo**:
-```bash
-mkdir -p ~/.bin
-curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
-chmod +x ~/.bin/repo
-echo 'export PATH="$HOME/.bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-repo --version
-```
+  - 3️⃣ **Install Repo**:
+    ```bash
+    mkdir -p ~/.bin
+    curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+    chmod +x ~/.bin/repo
+    echo 'export PATH="$HOME/.bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    repo --version
+    ```
 
-#### 4️⃣ **Install OpenJDK**:
-```bash
-sudo apt install openjdk-11-jdk -y
-java -version
-```
+  - #### 4️⃣ **Install OpenJDK**:
+    ```bash
+    sudo apt install openjdk-11-jdk -y
+    java -version
+    ```
 
-### ⚠️ **Memory Issues**:
+- ⚠️ **Memory Issues**:
 If you're using 16GB of RAM, you'll need to add swap memory to avoid compilation issues.
-```bash
-sudo fallocate -l 16G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-```
+    ```bash
+    sudo fallocate -l 16G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    ```
 
-To make it permanent:
-```bash
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
-Check memory usage:
-```bash
-free -h
-```
-## 💻 **Clone AOSP**:
+    To make it permanent:
+    ```bash
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    ```
+    Check memory usage:
+    ```bash
+    free -h
+    ```
+#### **Clone AOSP**:
 ```bash
 mkdir ~/android-aosp
 cd ~/android-aosp
