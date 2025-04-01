@@ -159,6 +159,10 @@ To successfully set up and run your C++ binary with gRPC on the Android VM, you'
     sudo apt install openjdk-11-jdk -y
     java -version
     ```
+  - #### 5️⃣ **Install libraries**:
+    ```bash
+    sudo apt install clang llvm android-tools-adb android-tools-fastboot -y
+    ```
 
 - ⚠️ **Memory Issues**:
 If you're using 16GB of RAM, you'll need to add swap memory to avoid compilation issues.
@@ -187,7 +191,7 @@ If you're using 16GB of RAM, you'll need to add swap memory to avoid compilation
         mkdir ~/android-aosp
         cd ~/android-aosp
         ```
-    - To get the latest version of Repo with its recent bug fixes . You must specify a URL for the manifest , which specifies where the various repositories included in the Android source are placed within your working directory
+    - To get the latest version of Repo with its recent bug fixes, You must specify a URL for the manifest , which specifies where the various repositories included in the Android source are placed within your working directory
       ```bash
       repo init -u https://android.googlesource.com/platform/manifest -b android14-gsi
       ```
@@ -228,150 +232,216 @@ bison --version
 make
 ```
 
-## 🚀 **gRPC Server Setup in AOSP**
-### Install Dependencies 🧰
+### 💻 Run a gRPC Server (C++) in VM Android
 
-Run the following command to install the necessary dependencies:
+1. **Verify the presence of the aprotoc binary and the protoc version**
+    ```bash
+    protoc --version
+    ```
+    The version must be 3.21.0
 
-```bash
-sudo apt install clang llvm android-tools-adb android-tools-fastboot -y
-```
+2. **Generate gRPC and C++ Files**
 
-### 📄 **Generate gRPC and C++ Files**
+    In the repo android-aosp/external/grpc-grpc/examples/protos/ directory there are .proto file. You can run the following commands to generate the necessary files:
 
-In the android-aosp/external/grpc-grpc/examples/protos/ directory, run the following commands to generate the necessary files:
+    ```bash
+    aprotoc --grpc_out=. --plugin=protoc-gen-grpc=/home/user/android-aosp/out/host/linux-x86/bin/protoc-gen-grpc-cpp-plugin helloworld.proto
+    aprotoc --cpp_out=. helloworld.proto
+    ```
+    These generated files declare the interfaces for gRPC services and contain the code for serializing and deserializing messages using the protobuf APIs.
 
-```bash
-aprotoc --grpc_out=. --plugin=protoc-gen-grpc=/home/user/android-aosp/out/host/linux-x86/bin/protoc-gen-grpc-cpp-plugin helloworld.proto
-aprotoc --cpp_out=. helloworld.proto
-```
+3. **Move Generated Files**
 
-### 📂 **Move Generated Files**
+    Move the generated files to android-aosp/external/grpc-grpc/examples/cpp/helloworld.
 
-Move the generated files to android-aosp/external/grpc-grpc/examples/cpp/helloworld.
+4. **Create android.bp File**
 
-### ⚙️ **Create android.bp File**
-
-Create a file named android.bp with the following content:
-```bash
-cc_binary {
-  name: "grpc_server",
-  vendor: true,
-  cflags: [
+    Create a file named android.bp in android-aosp/external/grpc-grpc/examples/cpp/helloworld with the following content:
+    ```bash
+    cc_binary {
+    name: "grpc_server",
+    vendor: true,
+    cflags: [
     "-Wno-error",
     "-Wno-unused-parameter",
     "-Wno-implicit-fallthrough",
     "-Wno-unused-result",
     "-g",
-  ],
-  srcs: [
+    ],
+    srcs: [
     "greeter_server.cc",
     "cmake/build/helloworld.grpc.pb.cc",
     "cmake/build/helloworld.pb.cc",
-  ],
-  include_dirs: [
+    ],
+    include_dirs: [
     "external/grpc-grpc/include",
     "external/protobuf/src",
     "external/grpc-grpc/examples/cpp/helloworld/cmake/build/",
-  ],
-  shared_libs: [
+    ],
+    shared_libs: [
     "libprotobuf-cpp-full",
     "libgrpc++_unsecure",
     "libz",
     "libc++",
     "libm",
     "libdl",
-  ],
-}
-```
+    ],
+    }
+    ```
+    This file is used in the Android build system based on Soong, which replaces the traditional Makefile-based build system. The main purpose of this file is to define the modules and their properties for building components in the Android project.
 
-### 📝 **Modify AOSP Makefile**
+5. **Modify AOSP Makefile**
 
-In android-aosp/device/google/cuttlefish/vsoc_x86_64/phone/aosp_cf.mk, add:
-```bash
-PRODUCT_PACKAGES += \
-  grpc_server
-```
-### ⚙️ **Build the Project**
+    In android-aosp/device/google/cuttlefish/vsoc_x86_64/phone/aosp_cf.mk, add:
+    ```bash
+    PRODUCT_PACKAGES += \
+      grpc_server
+    ```
+6. **Build the Project**
 
-Run the following command to build the project:
-```bash
-make
-```
+    Run the following command to build the project:
+    ```bash
+    make
+    ```
 
-## 🌐 **Run the Android VM (Cuttlefish)**
-**Start the Android VM** 🚀
+7. **Run the Android VM (Cuttlefish)**
+  
+    Create the Android VM instance:
+    ```bash
+    acloud create --local-instance 1 --local-image
+    ```
+8. **Access ADB Shell**
+    ```bash
+    adb root
+    adb shell
+    ```
+9. **Verify the Binary**
 
-Create the Android VM instance:
-```bash
-acloud create --local-instance 1 --local-image
-```
-**Access ADB Shell** 📱
-```bash
-adb root
-adb shell
-```
-**Verify the Binary** ✅
+    Check if the binary exists:
+    ```bash
+    ls /vendor/bin/grpc_server
+    ```
+10. **Run the gRPC Server**
 
-Check if the binary exists:
-```bash
-ls /vendor/bin/grpc_server
-```
-**Run the gRPC Server** 🖥️
+    Run the server:
+    ```bash
+    /vendor/bin/grpc_server
+    ```
+11. **Check the Server is Listening**
+    
+    **Expected output**:
+    ```bash
+    Server listening on 0.0.0.0:50051
+    ```
 
-Run the server:
-```bash
-/vendor/bin/grpc_server
-```
-**Check the Server is Listening** 📡
-```bash
-netstat -tulnp | grep 50051
-ip addr show
-```
-Expected output:
-```bash
-Server listening on 0.0.0.0:50051
-```
+### 🖥️ Run a gRPC Client (Python) on the host machine
+1. **Install Python Dependencies**
 
-## 🖥️ **Create and Run Python gRPC Client**
-### 📦 **Install Python Dependencies**
+    Install the necessary Python dependencies:
+    ```bash
+    pip3 install grpcio grpcio-tools
+    ```
+2. **Client Code (client.py)**
 
-Install the necessary Python dependencies:
-```bash
-pip3 install grpcio grpcio-tools
-```
-### 💻 **Client Code (client.py)**
+    Create the client.py file with the following code:
+    ```bash
+    import grpc
+    import helloworld_pb2
+    import helloworld_pb2_grpc
 
-Create the client.py file with the following code:
-```bash
-import grpc
-import helloworld_pb2
-import helloworld_pb2_grpc
+    def run():
+        with grpc.insecure_channel("your_vm_ip:50051") as channel:
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            response = stub.SayHello(helloworld_pb2.HelloRequest(name="Farah"))
+            print("Server response:", response.message)
 
-def run():
-    with grpc.insecure_channel("your_vm_ip:50051") as channel:
-        stub = helloworld_pb2_grpc.GreeterStub(channel)
-        response = stub.SayHello(helloworld_pb2.HelloRequest(name="Farah"))
-        print("Server response:", response.message)
+    if __name__ == "__main__":
+        run()
+    ```
+3. **Generate Python Code from .proto File**
 
-if __name__ == "__main__":
-    run()
-```
-### 🛠️ **Generate Python Code from .proto File**
+    Run the following command to generate the Python files from the .proto file:
+    ```bash
+    python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ helloworld.proto
+    ```
+4. **Run the Python Client**
 
-Run the following command to generate the Python files from the .proto file:
-```bash
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ helloworld.proto
-```
-### ▶️ **Run the Python Client**
+    Run the client with the following command:
+    ```bash
+    python3 client.py
+    ```
+5. **Expected Output**
+    ```bash
+    Server response: Hello Farah
+    ```
+![Project Architecture](./images/Resultat_communication_gRPC.png)
 
-Run the client with the following command:
-```bash
-python3 client.py
-```
-### 🎉 **Expected Output**
-```bash
-Server response: Hello Farah
-```
+## 📱 Android Application in Kotlin
+My Android diagnostic application, developed in Kotlin, provides real-time insights into vehicle performance. It features a user-friendly interface that displays essential metrics such as current fuel level and engine RPM, helping users monitor their vehicle’s condition effortlessly. Additionally, the app offers driving tips based on the collected data, enabling a more efficient and optimized driving experience. 
 
->>>>>>> bc79cba (Add grpc-server and grpc-client)
+## 🔧 GitLab CI Architecture 
+### Manifest file:
+To streamline development and deployment, I structured my **GitLab CI architecture** around a **GitLab group** named **`grpc-application-communication`**. This group contains three distinct projects:  
+
+- **`grpc-server`**: Handles server-side communication.  
+- **`grpc-client`**: Manages client-side interactions.  
+- **`diagnostic-application`**: The Android application providing vehicle diagnostics.  
+
+To ensure consistency and simplify management, I created these three projects within the group **using a `manifest.xml` file**. This approach allows for efficient synchronization and centralized control over all components of the system.
+
+**Steps:**
+
+To import the AOSP project into GitLab group, follow these steps:
+1. From your GitLab dashboard, select *New project*.
+2. Switch to the Import project tab.
+3. Choose Manifest file as the import method.
+4. Provide GitLab with the manifest XML file for the project.
+5. Select the group you want to import the project to (ensure you have created a group beforehand if needed).
+6. Click *List available repositories*. This will redirect you to the import status page with a list of projects based on the manifest file.
+7. To import the projects:
+   - For importing all projects for the first time: *Select Import all repositories*.
+   - For *re-importing individual projects*: Select *Re-import*, specify a new name, and click *Re-import* again. Re-importing will create a new copy of the source project.
+
+### GitLab runner:
+This project utilizes a GitLab Runner to manage and execute CI/CD pipelines. Given that the AOSP project is quite large (around 400GB), the GitLab Runner is configured to access the project on the host machine directly. This allows for efficient handling of the build and testing processes without the need to duplicate the entire project on the runner itself, ensuring faster and more resource-efficient operations.
+
+**Steps:**
+
+Follow these steps to install and register a GitLab Runner:
+
+1. **Install GitLab Runner on the host:**
+    - Download the GitLab Runner binary:
+      ```bash
+      sudo curl -L --output /usr/local/bin/gitlab-runner https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
+      ```
+    - Make it executable:
+      ```bash
+      sudo chmod +x /usr/local/bin/gitlab-runner
+      ```
+    - Create a `gitlab-runner` user:
+      ```bash
+      sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+      ```
+    - Install GitLab Runner:
+      ```bash
+      sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+      ```
+    - Start the GitLab Runner:
+      ```bash
+      sudo gitlab-runner start
+      ```
+    - Verify the installation:
+      ```bash
+      gitlab-runner --version
+      ```
+
+2. **Register the GitLab Runner:**
+    - Before registering, disable the **Enable instance runners for this project** option in your GitLab project:
+      - Go to **Settings > CI/CD > Runners**.
+      - Disable **Enable instance runners for this project**.
+    - Click **New project Runner**, and provide the necessary details, including **name**, **tags**, and other required information.
+    - After this, you can proceed with the registration using the **URL**, **token**, **name**, and **tags** provided by GitLab.
+
+      ```bash
+      gitlab-runner register
+      ```
