@@ -91,6 +91,12 @@ project/
 └── manifest.xml                                    # XML code to link three projects within the same GitLab group
 ```
 
+## 🏗️ Project Architecture
+
+### Global Architecture
+![Project Architecture](./images/gRPC application communication architecture.png)
+
+
 This guide will walk you through the process of setting up the AOSP build environment, compiling a C++ binary (`server.cpp`) to run in an Android VM (Cuttlefish), and establishing communication between a **gRPC client** (host) and a **gRPC server** (VM).
 
 ## 🖥️ **Prerequisites** 🛠️
