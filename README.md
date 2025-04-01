@@ -567,7 +567,52 @@ The architecture of Argo CD consists of several key components:
 ![Project Architecture](./images/grpc_server_pipeline.png)
 ![Project Architecture](./images/grpc_client_pipeline.png)
 ![Project Architecture](./images/hello_farah_pipeline.png)
-
 ### ArgoCD pipeline
 ![Project Architecture](./images/argoCD_resultat.png)
 
+## 🔧 Usage
+**Prerequisites**
+- GitLab Account: Free plan is sufficient.
+- Cloud Provider: A cloud provider offering managed Kubernetes services (Azure Kubernetes Service is used here, leveraging the $100 credit for students enrolled in a university).
+
+**Steps to Run**
+1. Clone the Repository
+
+    ```bash
+    git clone https://github.com/faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD.git
+
+    cd AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD
+    ```
+2. Set Up a GitLab Project
+- Create a new project in GitLab.
+
+- Add your GitLab runner with the necessary tags.
+
+- Add the GitLab CI/CD variables:
+  
+  - Go to Settings → CI/CD → Variables → Add variables:
+  - Uncheck the options in the Flags field
+
+| **Key**           | **Value**              | **Visibility** |
+|------------------|----------------------------|--------------|
+| DOCKER_USERNAME  | `<your_dockerhub_username>` | Visible      |
+| DOCKER_PASSWORD  | `<your_dockerhub_password>` | Masked       |
+
+## 🔮 Future Considerations
+1. Enhancement of the mobile application to improve performance and user experience.  
+2. Continuous development of new features to expand functionality and usability.  
+3. Optimization of the CI/CD pipeline for faster and more efficient deployments.  
+4. Exploration of additional integrations to enhance scalability and security.  
+
+## 🤝 Contributing
+We welcome contributions to enhance this project! Here's how you can get involved:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes.
+4. Open a pull request with a detailed description.
+
+## 👨‍💻 Project By
+<a href="https://github.com/faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD.git/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD.git" />
+</a>
