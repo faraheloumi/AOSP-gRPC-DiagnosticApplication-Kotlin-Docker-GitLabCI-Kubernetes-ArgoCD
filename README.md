@@ -564,9 +564,15 @@ The architecture of Argo CD consists of several key components:
 ![Project Architecture](./images/Application_Kotlin.png)
 
 ### CI/CD pipelines
+**gRPC server pipeline**
+
 ![Project Architecture](./images/grpc_server_pipeline.png)
+**gRPC client pipeline**
+
 ![Project Architecture](./images/grpc_client_pipeline.png)
 ![Project Architecture](./images/hello_farah_pipeline.png)
+**Application pipeline**
+
 ![Project Architecture](./images/Application_pipeline.png)
 ### ArgoCD pipeline
 ![Project Architecture](./images/argoCD_resultat.png)
