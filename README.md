@@ -6,20 +6,20 @@
 - [📌 Project Overview](#-project-overview)
 - [📁 Directory Structure](#-directory-structure)
 - [🏗️ Project Architecture](#%EF%B8%8F-project-architecture)
-- [⚙️ Technologies Used](#-llm)
-- [🌐 Communication between gRPC server and gRPC client](#-data)
-  - [📚 AOSP project](#-data-description)
-  - [💻 Run a gRPC Server (C++) in VM Android](#-data-preparation)
-  - [🖥️ Run a gRPC Client (Python) on the host machine](#-data-preparation)
-- [📱 Android Application in Kotlin ](#-model)
-- [🔧 GitLab CI Architecture](#-aws-setup)
-- [⚡ Kubernetes Architecture & Deployment](#-aws-setup)
-- [🌐 Argo CD Architecture & Deployment](#-aws-setup)
-- [📈 Results](#-resultat)
+- [⚙️ Technologies Used](#-technologies-used)
+- [🌐 Communication between gRPC server and gRPC client](#-communication-between-gRPC-server-and-gRPC-client)
+  - [📚 AOSP project](#-aosp-project)
+  - [💻 Run a gRPC Server (C++) in VM Android](##-run-a-grpc-server-(C++)-in-vm-android)
+  - [🖥️ Run a gRPC Client (Python) on the host machine](#️-run-a-grpc-client-python-on-the-host-machine-data-preparation)
+- [📱 Android Application in Kotlin ](#-android-application-in-kotlin-model)
+- [🔧 GitLab CI Architecture](#-gitlab-ci-architecture)
+- [⚡ Kubernetes Architecture & Deployment](#-kubernetes-architecture--deployment)
+- [🌐 Argo CD Architecture & Deployment](#-argo-cd-architecture--deployment)
+- [📈 Results](#-results)
 - [🔧 Usage](#-usage)
 - [🔮 Future Considerations](#-future-considerations)
 - [🤝 Contributing](#-contributing)
-- [👨‍💻 Project By](#project-by)
+- [👨‍💻 Project By](#-project-by)
 
 ## 📌 Project Overview  
 
@@ -155,12 +155,12 @@ To successfully set up and run your C++ binary with gRPC on the Android VM, you'
     repo --version
     ```
 
-  - #### 4️⃣ **Install OpenJDK**:
+  - 4️⃣ **Install OpenJDK**:
     ```bash
     sudo apt install openjdk-11-jdk -y
     java -version
     ```
-  - #### 5️⃣ **Install libraries**:
+  - 5️⃣ **Install libraries**:
     ```bash
     sudo apt install clang llvm android-tools-adb android-tools-fastboot -y
     ```
@@ -567,8 +567,10 @@ The architecture of Argo CD consists of several key components:
 ![Project Architecture](./images/grpc_server_pipeline.png)
 ![Project Architecture](./images/grpc_client_pipeline.png)
 ![Project Architecture](./images/hello_farah_pipeline.png)
+![Project Architecture](./images/Application_pipeline.png)
 ### ArgoCD pipeline
 ![Project Architecture](./images/argoCD_resultat.png)
+
 
 ## 🔧 Usage
 **Prerequisites**
