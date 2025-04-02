@@ -621,6 +621,6 @@ We welcome contributions to enhance this project! Here's how you can get involve
 4. Open a pull request with a detailed description.
 
 ## 👨‍💻 Project By
-<a href="https://github.com/faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD.git/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD.git" />
+<a href="https://github.com/faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=faraheloumi/AOSP-gRPC-DiagnosticApplication-Kotlin-Docker-GitLabCI-Kubernetes-ArgoCD" />
 </a>
