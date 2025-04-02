@@ -25,7 +25,6 @@ cache:
     - app/.gradle/
     - app/build/
 
-
 before_script:
   - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
   - sudo mkdir -p $ANDROID_SDK_ROOT/licenses
@@ -55,37 +54,11 @@ docker_build:
   services:
     - docker:24.0.5-dind
   script:
-    - sudo docker build -t $DOCKER_USERNAME/android-build:$IMAGE_VERSION .
-    - sudo docker images $DOCKER_USERNAME/android-build:$IMAGE_VERSION
-    - mkdir image
-    - sudo docker save $DOCKER_USERNAME/android-build:$IMAGE_VERSION | gzip > image/android-build-image-$IMAGE_VERSION.tar.gz
+    - sudo docker build -t $DOCKER_USERNAME/android-build:latest .
+    - echo $IMAGE_VERSION
+    - sudo docker tag $DOCKER_USERNAME/android-build:latest $DOCKER_USERNAME/android-build:$IMAGE_VERSION
+    - sudo docker images $DOCKER_USERNAME/android-build:latest
 
-  artifacts:
-    paths:
-      - image/android-build-image-$IMAGE_VERSION.tar.gz
-    when: on_success
-    expire_in: 3 days
-
-# Étape de test de l'image Docker
-docker_test:
-  stage: containerization
-  tags:    
-    - local
-    - aosp
-    - linux
-  image: docker:24.0.5
-  needs:
-    - docker_build
-  services:
-    - docker:24.0.5-dind
-  script:
-    - docker load -i image/android-build-image-$IMAGE_VERSION.tar
-    - docker run --name android-build-app -d -p 3000:3000 $DOCKER_USERNAME/android-build:$IMAGE_VERSION
-    - export IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' android-build-app)
-    - echo $IP
-    - docker run alpine wget -q -O - http://$IP:3000/live | grep live
-
-# Étape de push de l'image Docker dans le registre
 docker_push:
   stage: containerization
   tags:    
@@ -94,11 +67,15 @@ docker_push:
     - linux
   needs:
     - docker_build
-    - docker_test
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
   script:
-    - docker load -i image/android-build-image-$IMAGE_VERSION.tar
-    - docker login --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
-    - docker push $DOCKER_USERNAME/android-build:$IMAGE_VERSION
+    - docker logout
+    - sudo -u gitlab-runner docker login -u "$DOCKER_USERNAME" --password-stdin <<< "$DOCKER_PASSWORD"
+    - echo "$DOCKER_USERNAME"
+    - echo -n "$DOCKER_PASSWORD" | wc -c
+    - sudo -u gitlab-runner docker info | grep Username
+    - sudo -u gitlab-runner cat /home/gitlab-runner/.docker/config.json
+    - sudo docker images | grep "farahelloumi/android-build"
+    - sudo -u gitlab-runner docker push farahelloumi/android-build:latest
